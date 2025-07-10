@@ -1,0 +1,8 @@
+resources:
+  - deployment.yaml
+  - service.yaml
+
+image:
+  - name: ssj4358/webfront
+    newTag: latest
+    

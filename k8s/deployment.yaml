@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-api
+  template:
+    metadata:
+      labels:
+        app: flask-api
+    spec:
+      containers:
+      - name: flask-api
+        image: ssj4358/webfront:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: MYSQL_DATABASE_HOST
+          value: "mysql-service.default.svc.cluster.local"
+        - name: MYSQL_DATABASE_USRE
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: user
+        - name: MYSQL_DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: password
