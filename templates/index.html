@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .section h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="text"], input[type="email"], select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input[type="text"]:focus, input[type="email"]:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #36d1dc, #5b86e5);
+            color: white;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(54, 209, 220, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #11998e, #38ef7d);
+            color: white;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-weight: 600;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .status.success {
+            background: linear-gradient(45deg, #d4edda, #c3e6cb);
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: linear-gradient(45deg, #f8d7da, #f1b0b7);
+            color: #721c24;
+            border: 1px solid #f1b0b7;
+        }
+
+        .status.info {
+            background: linear-gradient(45deg, #d1ecf1, #bee5eb);
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .employee-list {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .employee-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .employee-item:hover {
+            transform: translateX(5px);
+        }
+
+        .employee-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .employee-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .employee-details {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .health-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.healthy {
+            background: #28a745;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 20px;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .form-row .form-group {
+                margin-bottom: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 Employee Management System</h1>
+            <p>직원 정보를 효율적으로 관리하세요</p>
+        </div>
+
+        <div class="main-content">
+            <!-- 상태 확인 섹션 -->
+            <div class="section">
+                <h2>🔍 시스템 상태</h2>
+                <button class="btn btn-primary" onclick="checkHealth()">상태 확인</button>
+                <div id="healthStatus"></div>
+            </div>
+
+            <!-- 직원 조회 섹션 -->
+            <div class="section">
+                <h2>👥 직원 조회</h2>
+                <button class="btn btn-secondary" onclick="loadEmployees()">전체 직원 조회</button>
+                <button class="btn btn-secondary" onclick="loadEmployeesSimple()">간단 조회</button>
+                <div class="loading" id="loadingEmployees">
+                    <div class="spinner"></div>
+                    <p>직원 정보를 불러오는 중...</p>
+                </div>
+                <div id="employeeList"></div>
+            </div>
+
+            <!-- 직원 추가 섹션 -->
+            <div class="section">
+                <h2>➕ 직원 추가</h2>
+                <form id="addEmployeeForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="name">이름 *</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">이메일 *</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="department">부서</label>
+                        <select id="department" name="department">
+                            <option value="IT">IT</option>
+                            <option value="HR">HR</option>
+                            <option value="Finance">Finance</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Operations">Operations</option>
+                            <option value="Sales">Sales</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success">직원 추가</button>
+                </form>
+                <div id="addEmployeeStatus"></div>
+            </div>
+
+            <!-- 테스트 직원 추가 섹션 -->
+            <div class="section">
+                <h2>🧪 테스트 직원 추가</h2>
+                <p>테스트용 직원을 빠르게 추가할 수 있습니다.</p>
+                <button class="btn btn-primary" onclick="addTestEmployee()">테스트 직원 추가</button>
+                <div id="testEmployeeStatus"></div>
+            </div>
+
+            <!-- 여러 직원 추가 섹션 -->
+            <div class="section">
+                <h2>📋 여러 직원 한번에 추가</h2>
+                <p>샘플 직원 데이터를 한번에 추가합니다.</p>
+                <button class="btn btn-success" onclick="addMultipleEmployees()">샘플 직원들 추가</button>
+                <div id="multipleEmployeeStatus"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000';
+
+        // 상태 확인
+        async function checkHealth() {
+            const statusDiv = document.getElementById('healthStatus');
+            statusDiv.innerHTML = '<div class="loading show"><div class="spinner"></div><p>상태를 확인하는 중...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusDiv.innerHTML = `
+                        <div class="health-status">
+                            <div class="status-dot ${data.status === 'healthy' ? 'healthy' : ''}"></div>
+                            <span><strong>상태:</strong> ${data.status}</span>
+                            <span><strong>데이터베이스:</strong> ${data.database}</span>
+                        </div>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `<div class="status error">❌ 상태 확인 실패: ${data.error || '알 수 없는 오류'}</div>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ 서버 연결 실패: ${error.message}</div>`;
+            }
+        }
+
+        // 직원 목록 조회 (JSON)
+        async function loadEmployees() {
+            const loadingDiv = document.getElementById('loadingEmployees');
+            const listDiv = document.getElementById('employeeList');
+            
+            loadingDiv.classList.add('show');
+            listDiv.innerHTML = '';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/read-from-database-json`);
+                const data = await response.json();
+                
+                loadingDiv.classList.remove('show');
+                
+                if (response.ok && data.employees) {
+                    let html = '<div class="employee-list">';
+                    data.employees.forEach(employee => {
+                        html += `
+                            <div class="employee-item">
+                                <div class="employee-name">${employee.name}</div>
+                                <div class="employee-details">
+                                    📧 ${employee.email} | 🏢 ${employee.department || 'Unknown'} | 🆔 ${employee.id}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    listDiv.innerHTML = html;
+                } else {
+                    listDiv.innerHTML = `<div class="status info">ℹ️ ${data.message || '직원이 없습니다'}</div>`;
+                }
+            } catch (error) {
+                loadingDiv.classList.remove('show');
+                listDiv.innerHTML = `<div class="status error">❌ 직원 조회 실패: ${error.message}</div>`;
+            }
+        }
+
+        // 직원 목록 조회 (간단)
+        async function loadEmployeesSimple() {
+            const loadingDiv = document.getElementById('loadingEmployees');
+            const listDiv = document.getElementById('employeeList');
+            
+            loadingDiv.classList.add('show');
+            listDiv.innerHTML = '';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/read-from-database`);
+                const data = await response.text();
+                
+                loadingDiv.classList.remove('show');
+                
+                if (response.ok && data) {
+                    const ids = data.split(',').filter(id => id.trim());
+                    if (ids.length > 0) {
+                        listDiv.innerHTML = `
+                            <div class="status info">
+                                📊 총 ${ids.length}명의 직원이 있습니다.<br>
+                                🆔 직원 ID: ${ids.join(', ')}
+                            </div>
+                        `;
+                    } else {
+                        listDiv.innerHTML = `<div class="status info">ℹ️ 직원이 없습니다</div>`;
+                    }
+                } else {
+                    listDiv.innerHTML = `<div class="status error">❌ 직원 조회 실패</div>`;
+                }
+            } catch (error) {
+                loadingDiv.classList.remove('show');
+                listDiv.innerHTML = `<div class="status error">❌ 직원 조회 실패: ${error.message}</div>`;
+            }
+        }
+
+        // 직원 추가
+        document.getElementById('addEmployeeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const employeeData = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                department: formData.get('department')
+            };
+            
+            const statusDiv = document.getElementById('addEmployeeStatus');
+            statusDiv.innerHTML = '<div class="loading show"><div class="spinner"></div><p>직원을 추가하는 중...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/add-employee`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(employeeData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ ${data.message}<br>
+                            👤 <strong>${data.name}</strong> (${data.email})<br>
+                            🏢 부서: ${data.department} | 🆔 ID: ${data.employee_id}
+                        </div>
+                    `;
+                    e.target.reset();
+                } else {
+                    statusDiv.innerHTML = `<div class="status error">❌ 직원 추가 실패: ${data.error}</div>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ 서버 연결 실패: ${error.message}</div>`;
+            }
+        });
+
+        // 테스트 직원 추가
+        async function addTestEmployee() {
+            const statusDiv = document.getElementById('testEmployeeStatus');
+            statusDiv.innerHTML = '<div class="loading show"><div class="spinner"></div><p>테스트 직원을 추가하는 중...</p></div>';
+            
+            const randomId = Math.floor(Math.random() * 10000);
+            const testName = `테스트사용자${randomId}`;
+            const testEmail = `test${randomId}@example.com`;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/add-employee-simple?name=${encodeURIComponent(testName)}&email=${encodeURIComponent(testEmail)}&department=IT`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ ${data.message}<br>
+                            👤 <strong>${data.name}</strong> (${data.email})<br>
+                            🏢 부서: ${data.department} | 🆔 ID: ${data.employee_id}
+                        </div>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `<div class="status error">❌ 테스트 직원 추가 실패: ${data.error}</div>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ 서버 연결 실패: ${error.message}</div>`;
+            }
+        }
+
+        // 여러 직원 추가
+        async function addMultipleEmployees() {
+            const statusDiv = document.getElementById('multipleEmployeeStatus');
+            statusDiv.innerHTML = '<div class="loading show"><div class="spinner"></div><p>여러 직원을 추가하는 중...</p></div>';
+            
+            const sampleEmployees = {
+                employees: [
+                    { name: '김철수', email: 'kim.cs@company.com', department: 'IT' },
+                    { name: '이영희', email: 'lee.yh@company.com', department: 'HR' },
+                    { name: '박민수', email: 'park.ms@company.com', department: 'Finance' },
+                    { name: '최지은', email: 'choi.je@company.com', department: 'Marketing' },
+                    { name: '정호석', email: 'jung.hs@company.com', department: 'Operations' }
+                ]
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/add-multiple-employees`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(sampleEmployees)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ ${data.message}<br>
+                            📊 총 ${data.count}명의 직원이 추가되었습니다.
+                        </div>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `<div class="status error">❌ 여러 직원 추가 실패: ${data.error}</div>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ 서버 연결 실패: ${error.message}</div>`;
+            }
+        }
+
+        // 페이지 로드 시 상태 확인
+        window.addEventListener('load', () => {
+            checkHealth();
+        });
+    </script>
+</body>
+</html>

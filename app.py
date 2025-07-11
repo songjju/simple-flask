@@ -1,14 +1,16 @@
 import os
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 import mysql.connector
 from mysql.connector import Error
 import logging
+from flask_cors import CORS
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+CORS(app)
 
 # MySQL 설정
 MYSQL_CONFIG = {
@@ -46,6 +48,10 @@ def close_db_connection(connection, cursor=None):
 @app.route("/")
 def main():
     return "Welcome!"
+
+@app.route('/ui')
+def ui():
+    return render_template('index.html')
 
 @app.route('/how-are-you')
 def hello():
