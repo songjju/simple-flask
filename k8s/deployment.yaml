@@ -21,7 +21,7 @@ spec:
         env:
         - name: MYSQL_DATABASE_HOST
           value: "mysql-service.default.svc.cluster.local"
-        - name: MYSQL_DATABASE_USRE
+        - name: MYSQL_DATABASE_USER
           valueFrom:
             secretKeyRef:
               name: mysql-secret

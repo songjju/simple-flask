@@ -6,6 +6,7 @@ namespace: flask-app
 resources:
   - deployment.yaml
   - service.yaml
+  - namespace.yaml
 
 images:
   - name: ssj4358/webfront
