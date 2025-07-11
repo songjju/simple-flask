@@ -20,7 +20,7 @@ spec:
         - containerPort: 5000
         env:
         - name: MYSQL_DATABASE_HOST
-          value: "mysql-service.default.svc.cluster.local"
+          value: "mysql-service.flask-app.svc.cluster.local"
         - name: MYSQL_DATABASE_USER
           valueFrom:
             secretKeyRef:

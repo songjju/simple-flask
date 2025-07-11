@@ -9,8 +9,7 @@ spec:
     repoURL: https://github.com/songjju/simple-flask.git
     targetRevision: main
     path: k8s
-    directory:
-      recurse: true
+    kustomize: {}
   destination:
     server: https://kubernetes.default.svc
     namespace: flask-app
@@ -18,3 +17,5 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
