@@ -25,9 +25,9 @@ spec:
           valueFrom:
             secretKeyRef:
               name: mysql-secret
-              key: user
+              key: MYSQL_DATABASE_USER  # Secret의 실제 키 이름 사용
         - name: MYSQL_DATABASE_PASSWORD
           valueFrom:
             secretKeyRef:
               name: mysql-secret
-              key: password
+              key: MYSQL_DATABASE_PASSWORD  # Secret의 실제 키 이름 사용
