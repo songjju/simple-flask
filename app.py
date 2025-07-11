@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import mysql.connector
 from mysql.connector import Error
 import logging
@@ -103,6 +103,175 @@ def read_json():
         
         return jsonify({"employees": rows})
         
+    except Error as e:
+        logger.error(f"Database query error: {e}")
+        return jsonify({"error": "Database query failed"}), 500
+    
+    finally:
+        close_db_connection(connection, cursor)
+
+@app.route('/add-employee', methods=['POST'])
+def add_employee():
+    """직원 데이터 추가"""
+    connection = None
+    cursor = None
+    
+    try:
+        # 요청 데이터 검증
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No JSON data provided"}), 400
+        
+        name = data.get('name')
+        email = data.get('email')
+        department = data.get('department', 'Unknown')
+        
+        if not name or not email:
+            return jsonify({"error": "Name and email are required"}), 400
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({"error": "Database connection failed"}), 500
+        
+        cursor = connection.cursor()
+        
+        # 직원 데이터 삽입
+        insert_query = """
+            INSERT INTO employees (name, email, department) 
+            VALUES (%s, %s, %s)
+        """
+        cursor.execute(insert_query, (name, email, department))
+        
+        # 삽입된 직원의 ID 가져오기
+        employee_id = cursor.lastrowid
+        
+        logger.info(f"Added employee: {name} ({email}) with ID: {employee_id}")
+        
+        return jsonify({
+            "message": "Employee added successfully",
+            "employee_id": employee_id,
+            "name": name,
+            "email": email,
+            "department": department
+        }), 201
+        
+    except mysql.connector.IntegrityError as e:
+        logger.error(f"Database integrity error: {e}")
+        return jsonify({"error": "Email already exists"}), 409
+    
+    except Error as e:
+        logger.error(f"Database query error: {e}")
+        return jsonify({"error": "Database query failed"}), 500
+    
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+    
+    finally:
+        close_db_connection(connection, cursor)
+
+@app.route('/add-employee-simple', methods=['GET'])
+def add_employee_simple():
+    """간단한 직원 데이터 추가 (GET 요청으로 테스트용)"""
+    connection = None
+    cursor = None
+    
+    try:
+        # URL 파라미터에서 데이터 가져오기
+        name = request.args.get('name', 'Test User')
+        email = request.args.get('email', f'test{len(str(hash(name)))}@example.com')
+        department = request.args.get('department', 'IT')
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({"error": "Database connection failed"}), 500
+        
+        cursor = connection.cursor()
+        
+        # 직원 데이터 삽입
+        insert_query = """
+            INSERT INTO employees (name, email, department) 
+            VALUES (%s, %s, %s)
+        """
+        cursor.execute(insert_query, (name, email, department))
+        
+        # 삽입된 직원의 ID 가져오기
+        employee_id = cursor.lastrowid
+        
+        logger.info(f"Added employee: {name} ({email}) with ID: {employee_id}")
+        
+        return jsonify({
+            "message": "Employee added successfully",
+            "employee_id": employee_id,
+            "name": name,
+            "email": email,
+            "department": department
+        }), 201
+        
+    except mysql.connector.IntegrityError as e:
+        logger.error(f"Database integrity error: {e}")
+        return jsonify({"error": "Email already exists"}), 409
+    
+    except Error as e:
+        logger.error(f"Database query error: {e}")
+        return jsonify({"error": "Database query failed"}), 500
+    
+    finally:
+        close_db_connection(connection, cursor)
+
+@app.route('/add-multiple-employees', methods=['POST'])
+def add_multiple_employees():
+    """여러 직원 데이터 한 번에 추가"""
+    connection = None
+    cursor = None
+    
+    try:
+        data = request.get_json()
+        if not data or 'employees' not in data:
+            return jsonify({"error": "No employees data provided"}), 400
+        
+        employees = data['employees']
+        if not isinstance(employees, list):
+            return jsonify({"error": "Employees must be a list"}), 400
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({"error": "Database connection failed"}), 500
+        
+        cursor = connection.cursor()
+        
+        # 여러 직원 데이터 삽입
+        insert_query = """
+            INSERT INTO employees (name, email, department) 
+            VALUES (%s, %s, %s)
+        """
+        
+        employee_data = []
+        for emp in employees:
+            if not emp.get('name') or not emp.get('email'):
+                continue
+            employee_data.append((
+                emp['name'],
+                emp['email'],
+                emp.get('department', 'Unknown')
+            ))
+        
+        if not employee_data:
+            return jsonify({"error": "No valid employee data provided"}), 400
+        
+        cursor.executemany(insert_query, employee_data)
+        
+        logger.info(f"Added {len(employee_data)} employees")
+        
+        return jsonify({
+            "message": f"Successfully added {len(employee_data)} employees",
+            "count": len(employee_data)
+        }), 201
+        
+    except mysql.connector.IntegrityError as e:
+        logger.error(f"Database integrity error: {e}")
+        return jsonify({"error": "One or more emails already exist"}), 409
+    
     except Error as e:
         logger.error(f"Database query error: {e}")
         return jsonify({"error": "Database query failed"}), 500
