@@ -4,8 +4,8 @@ kind: Kustomization
 namespace: flask-app
 
 resources:
-  - deployment.yaml
-  - service.yaml
+  - flask-deployment.yaml
+  - flask-service.yaml
   - namespace.yaml
 
 images:
