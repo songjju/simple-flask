@@ -53,6 +53,64 @@ def close_db_connection(connection, cursor=None):
     except Error as e:
         logger.error(f"Error closing database connection: {e}")
 
+def create_employees_table():
+    """employees 테이블 생성"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            logger.error("Database connection failed during table creation")
+            return False
+        
+        cursor = connection.cursor()
+        
+        # employees 테이블 생성 쿼리
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS employees (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            email VARCHAR(255) NOT NULL UNIQUE,
+            department VARCHAR(100) DEFAULT 'Unknown',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        """
+        
+        cursor.execute(create_table_query)
+        logger.info("employees table created successfully or already exists")
+        
+        # 인덱스 생성 (성능 향상을 위해)
+        create_index_query = """
+        CREATE INDEX IF NOT EXISTS idx_employees_email ON employees(email);
+        """
+        cursor.execute(create_index_query)
+        
+        create_index_query2 = """
+        CREATE INDEX IF NOT EXISTS idx_employees_department ON employees(department);
+        """
+        cursor.execute(create_index_query2)
+        
+        logger.info("employees table indexes created successfully")
+        return True
+        
+    except Error as e:
+        logger.error(f"Error creating employees table: {e}")
+        return False
+    
+    finally:
+        close_db_connection(connection, cursor)
+
+def initialize_database():
+    """데이터베이스 초기화"""
+    logger.info("Initializing database...")
+    
+    if create_employees_table():
+        logger.info("Database initialization completed successfully")
+    else:
+        logger.error("Database initialization failed")
+
 @app.route("/")
 def main():
     return "Welcome!"
@@ -65,6 +123,18 @@ def ui():
 @app.route('/how-are-you')
 def hello():
     return 'I am good, how about you?'
+
+@app.route('/init-db')
+def init_database():
+    """데이터베이스 초기화 엔드포인트"""
+    try:
+        if create_employees_table():
+            return jsonify({"message": "Database initialized successfully"}), 200
+        else:
+            return jsonify({"error": "Database initialization failed"}), 500
+    except Exception as e:
+        logger.error(f"Database initialization error: {e}")
+        return jsonify({"error": "Database initialization failed"}), 500
 
 @app.route('/read-from-database')
 def read():
@@ -315,6 +385,9 @@ def health_check():
             close_db_connection(connection)
 
 if __name__ == "__main__":
+    # 애플리케이션 시작 시 데이터베이스 초기화
+    initialize_database()
+    
     # 개발 환경에서만 debug=True 사용
     debug_mode = os.environ.get('FLASK_ENV') == 'development'
     app.run(debug=debug_mode, host='0.0.0.0', port=5000)
