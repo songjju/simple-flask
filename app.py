@@ -1,16 +1,24 @@
 import os
 from flask import Flask, jsonify, request, render_template
+from flask_cors import CORS
 import mysql.connector
 from mysql.connector import Error
 import logging
-from flask_cors import CORS
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)
+
+# CORS 설정 강화
+CORS(app, resources={
+    r"/*": {
+        "origins": ["http://localhost:5000", "http://127.0.0.1:5000"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 # MySQL 설정
 MYSQL_CONFIG = {
@@ -49,6 +57,7 @@ def close_db_connection(connection, cursor=None):
 def main():
     return "Welcome!"
 
+# UI 라우트 추가
 @app.route('/ui')
 def ui():
     return render_template('index.html')

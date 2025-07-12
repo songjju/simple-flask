@@ -427,7 +427,10 @@
     </div>
 
     <script>
-        const API_BASE_URL = 'http://localhost:5000';
+        // API 기본 URL 설정 (여러 옵션 시도)
+        const API_BASE_URL = window.location.origin; // 현재 페이지와 같은 도메인 사용
+        // const API_BASE_URL = 'http://127.0.0.1:5000'; // 대안 1
+        // const API_BASE_URL = 'http://localhost:5000'; // 대안 2
 
         // 상태 확인
         async function checkHealth() {
@@ -435,6 +438,7 @@
             statusDiv.innerHTML = '<div class="loading show"><div class="spinner"></div><p>상태를 확인하는 중...</p></div>';
             
             try {
+                console.log('Attempting to connect to:', `${API_BASE_URL}/health`);
                 const response = await fetch(`${API_BASE_URL}/health`);
                 const data = await response.json();
                 
@@ -450,7 +454,14 @@
                     statusDiv.innerHTML = `<div class="status error">❌ 상태 확인 실패: ${data.error || '알 수 없는 오류'}</div>`;
                 }
             } catch (error) {
-                statusDiv.innerHTML = `<div class="status error">❌ 서버 연결 실패: ${error.message}</div>`;
+                console.error('Connection error:', error);
+                statusDiv.innerHTML = `
+                    <div class="status error">
+                        ❌ 서버 연결 실패: ${error.message}<br>
+                        <small>API URL: ${API_BASE_URL}/health</small><br>
+                        <small>Flask 서버가 실행 중인지 확인해주세요.</small>
+                    </div>
+                `;
             }
         }
 
