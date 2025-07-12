@@ -364,6 +364,154 @@ def add_multiple_employees():
     finally:
         close_db_connection(connection, cursor)
 
+@app.route('/list-tables')
+def list_tables():
+    """데이터베이스의 모든 테이블 목록 조회"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({"error": "Database connection failed"}), 500
+        
+        cursor = connection.cursor()
+        cursor.execute("SHOW TABLES")
+        
+        tables = cursor.fetchall()
+        table_list = [table[0] for table in tables]
+        
+        logger.info(f"Found {len(table_list)} tables in database")
+        
+        return jsonify({
+            "tables": table_list,
+            "count": len(table_list)
+        })
+        
+    except Error as e:
+        logger.error(f"Database query error: {e}")
+        return jsonify({"error": "Database query failed"}), 500
+    
+    finally:
+        close_db_connection(connection, cursor)
+
+@app.route('/table-info')
+def table_info():
+    """데이터베이스의 모든 테이블 정보 조회 (테이블명, 행 수, 생성일 등)"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({"error": "Database connection failed"}), 500
+        
+        cursor = connection.cursor(dictionary=True)
+        
+        # 테이블 목록 조회
+        cursor.execute("SHOW TABLES")
+        tables = cursor.fetchall()
+        
+        if not tables:
+            return jsonify({"message": "No tables found", "tables": []})
+        
+        # 데이터베이스 이름 가져오기
+        db_name = MYSQL_CONFIG['database']
+        
+        table_info_list = []
+        
+        for table in tables:
+            table_name = table[f'Tables_in_{db_name}']
+            
+            # 각 테이블의 행 수 조회
+            cursor.execute(f"SELECT COUNT(*) as row_count FROM {table_name}")
+            row_count = cursor.fetchone()['row_count']
+            
+            # 테이블 정보 조회 (생성일, 엔진 등)
+            cursor.execute(f"""
+                SELECT 
+                    CREATE_TIME,
+                    ENGINE,
+                    TABLE_ROWS,
+                    DATA_LENGTH,
+                    INDEX_LENGTH,
+                    TABLE_COMMENT
+                FROM information_schema.TABLES 
+                WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s
+            """, (db_name, table_name))
+            
+            table_details = cursor.fetchone()
+            
+            table_info = {
+                "table_name": table_name,
+                "row_count": row_count,
+                "engine": table_details['ENGINE'] if table_details else None,
+                "create_time": table_details['CREATE_TIME'].isoformat() if table_details and table_details['CREATE_TIME'] else None,
+                "data_length": table_details['DATA_LENGTH'] if table_details else None,
+                "index_length": table_details['INDEX_LENGTH'] if table_details else None,
+                "comment": table_details['TABLE_COMMENT'] if table_details else None
+            }
+            
+            table_info_list.append(table_info)
+        
+        logger.info(f"Retrieved information for {len(table_info_list)} tables")
+        
+        return jsonify({
+            "database": db_name,
+            "tables": table_info_list,
+            "count": len(table_info_list)
+        })
+        
+    except Error as e:
+        logger.error(f"Database query error: {e}")
+        return jsonify({"error": "Database query failed"}), 500
+    
+    finally:
+        close_db_connection(connection, cursor)
+
+@app.route('/table-structure/<table_name>')
+def table_structure(table_name):
+    """특정 테이블의 구조 조회"""
+    connection = None
+    cursor = None
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({"error": "Database connection failed"}), 500
+        
+        cursor = connection.cursor(dictionary=True)
+        
+        # 테이블 존재 여부 확인
+        cursor.execute("SHOW TABLES LIKE %s", (table_name,))
+        if not cursor.fetchone():
+            return jsonify({"error": f"Table '{table_name}' not found"}), 404
+        
+        # 테이블 구조 조회
+        cursor.execute(f"DESCRIBE {table_name}")
+        columns = cursor.fetchall()
+        
+        # 인덱스 정보 조회
+        cursor.execute(f"SHOW INDEX FROM {table_name}")
+        indexes = cursor.fetchall()
+        
+        logger.info(f"Retrieved structure for table: {table_name}")
+        
+        return jsonify({
+            "table_name": table_name,
+            "columns": columns,
+            "indexes": indexes,
+            "column_count": len(columns),
+            "index_count": len(indexes)
+        })
+        
+    except Error as e:
+        logger.error(f"Database query error: {e}")
+        return jsonify({"error": "Database query failed"}), 500
+    
+    finally:
+        close_db_connection(connection, cursor)
+
 @app.route('/health')
 def health_check():
     """애플리케이션 상태 확인"""
